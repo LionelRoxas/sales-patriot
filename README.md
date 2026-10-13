@@ -34,9 +34,9 @@ python -m venv .venv
 | File | Rows | Cage filled |
 |---|---|---|
 | `output/linked_vendor_manufacturers.csv` | 10,346 (3,638 vendors) | 76% |
-| `output/orphan_vendors.csv` | 13,787 | 36% |
-| `output/orphan_manufacturers.csv` | 10,729 | 100% |
-| `output/rejected.csv` | 3,533 | rows that were dropped, with the reason |
+| `output/orphan_vendors.csv` | 13,787 | 37% |
+| `output/orphan_manufacturers.csv` | 10,470 | 100% |
+| `output/rejected.csv` | 4,100 | rows that were dropped, with the reason |
 
 The linked list has two extra columns: `link_id` (the vendor id) and `role` (`vendor` or `manufacturer`).
 The vendor row comes first in each group.
@@ -51,9 +51,12 @@ The vendor row comes first in each group.
 - **Vendor codes are matched as numbers.** `VendorCode` is `2538.0` and `VendorId` is `002538`.
 - **Manufacturers whose vendor has no name** (vendors 0, 2 and 5 cover about 3,500 rows) have no real parent,
   so they are treated as orphans.
-- **A vendor linked only to its own cage** represents itself, so it is an orphan vendor rather than a one-row group.
-- **Linked firms win duplicates.** An orphan whose cage or name is already in the linked list is dropped, and
-  an orphan manufacturer that is already an orphan vendor is dropped too.
-- **Nothing is dropped silently.** Every removed row is in `output/rejected.csv`.
+- **A manufacturer row with its vendor's own cage is the vendor itself**, not a child. It is left out of the
+  group (its email fills the vendor's if that is empty). A vendor linked only to itself is an orphan vendor.
+- **Linked firms win duplicates.** An orphan whose cage or name is already in the linked list is dropped.
+- **Between the orphan lists the vendor wins**, since it has the contact details. An orphan vendor with no cage
+  takes the cage of the orphan manufacturer with the same name, and that manufacturer is dropped.
+- **Nothing is dropped silently.** Every removed row is in `output/rejected.csv`, and a test checks that every
+  cage maintenance row ends up in an output list or there.
 
 The source data is anonymised, so emails often don't match the company they belong to.

@@ -59,3 +59,22 @@ def test_orphans_are_not_in_linked_list():
     linked_cages = set(load("linked_vendor_manufacturers.csv")["cage"].dropna())
     for name in ["orphan_manufacturers.csv", "orphan_vendors.csv"]:
         assert not set(load(name)["cage"].dropna()) & linked_cages
+
+
+def test_orphan_lists_do_not_share_firms():
+    vendors = load("orphan_vendors.csv")
+    manufacturers = load("orphan_manufacturers.csv")
+    assert not set(vendors["cage"].dropna()) & set(manufacturers["cage"].dropna())
+    names = lambda df: set(df["company_name"].str.upper().str.strip())
+    assert not names(vendors) & names(manufacturers)
+
+
+def test_every_manufacturer_row_is_accounted_for():
+    source = HERE.parent / "data" / "Cage Maintenance_ANONYMIZED.csv"
+    if not source.exists():
+        pytest.skip("raw data not in data/")
+    linked = load("linked_vendor_manufacturers.csv")
+    rejected = load("rejected.csv")
+    kept = (linked["role"] == "manufacturer").sum() + len(load("orphan_manufacturers.csv"))
+    dropped = (rejected["source"] == "cage_maintenance").sum()
+    assert kept + dropped == len(pd.read_csv(source, dtype=str))
